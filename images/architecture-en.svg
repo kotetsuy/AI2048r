@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="660" viewBox="0 0 900 660" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="660" fill="#f7f8fa"/>
+  <text x="450" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#222">2048 × OpenClaw Offline Commentary Demo — Architecture</text>
+
+  <!-- Host box -->
+  <rect x="20" y="56" width="560" height="560" rx="10" fill="#ffffff" stroke="#9bb1c9" stroke-width="2"/>
+  <text x="36" y="80" font-size="15" font-weight="bold" fill="#2c5d8f">Host (Ubuntu 24.04 / Ryzen AI MAX+ 395 / gfx1151 / ROCm)</text>
+
+  <!-- 2048 server -->
+  <rect x="40" y="100" width="240" height="56" rx="8" fill="#eef6ff" stroke="#3a7bd5"/>
+  <text x="160" y="124" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b4f86">2048 static server</text>
+  <text x="160" y="142" text-anchor="middle" font-size="12" fill="#444">python http.server :8009</text>
+
+  <!-- Chrome CDP -->
+  <rect x="40" y="170" width="240" height="70" rx="8" fill="#eef6ff" stroke="#3a7bd5"/>
+  <text x="160" y="193" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b4f86">Chrome (headed)</text>
+  <text x="160" y="211" text-anchor="middle" font-size="12" fill="#444">CDP :9222 — the window for the audience</text>
+  <text x="160" y="228" text-anchor="middle" font-size="12" fill="#444">shows 2048, driven by the bot</text>
+
+  <!-- llama -->
+  <rect x="40" y="254" width="240" height="70" rx="8" fill="#fff4e6" stroke="#e08a2b"/>
+  <text x="160" y="277" text-anchor="middle" font-size="13" font-weight="bold" fill="#9c5a14">llama-server :8080</text>
+  <text x="160" y="295" text-anchor="middle" font-size="12" fill="#444">Qwen3.6-35B-A3B (thinking off)</text>
+  <text x="160" y="312" text-anchor="middle" font-size="12" fill="#444">-c 65536 --parallel 2 (shared)</text>
+
+  <!-- VOICEVOX -->
+  <rect x="40" y="338" width="240" height="56" rx="8" fill="#fff4e6" stroke="#e08a2b"/>
+  <text x="160" y="362" text-anchor="middle" font-size="13" font-weight="bold" fill="#9c5a14">VOICEVOX (docker) :50021</text>
+  <text x="160" y="380" text-anchor="middle" font-size="12" fill="#444">speech synthesis (Zundamon voice id=3)</text>
+
+  <!-- three-vrm -->
+  <rect x="40" y="408" width="240" height="86" rx="8" fill="#eafaf0" stroke="#2fa76a"/>
+  <text x="160" y="431" text-anchor="middle" font-size="13" font-weight="bold" fill="#1c7a49">three-vrm :8000</text>
+  <text x="160" y="449" text-anchor="middle" font-size="12" fill="#444">/speak -&gt; VOICEVOX synth</text>
+  <text x="160" y="466" text-anchor="middle" font-size="12" fill="#444">VRM avatar (Koteko) display</text>
+  <text x="160" y="483" text-anchor="middle" font-size="12" fill="#444">background relay /bg /bg_ingest</text>
+
+  <!-- bgcast -->
+  <rect x="40" y="508" width="240" height="56" rx="8" fill="#eafaf0" stroke="#2fa76a"/>
+  <text x="160" y="532" text-anchor="middle" font-size="13" font-weight="bold" fill="#1c7a49">play2048_bgcast.py</text>
+  <text x="160" y="550" text-anchor="middle" font-size="12" fill="#444">CDP screencast -&gt; background</text>
+
+  <!-- Display window -->
+  <rect x="320" y="170" width="240" height="160" rx="8" fill="#f3f0ff" stroke="#7a5cd0"/>
+  <text x="440" y="194" text-anchor="middle" font-size="13" font-weight="bold" fill="#553aa8">VRM display Chrome (fullscreen)</text>
+  <text x="440" y="214" text-anchor="middle" font-size="12" fill="#444">zundamon.html</text>
+  <text x="440" y="234" text-anchor="middle" font-size="12" fill="#444">background = live 2048 board</text>
+  <text x="440" y="254" text-anchor="middle" font-size="12" fill="#444">foreground = avatar narrating</text>
+  <text x="440" y="274" text-anchor="middle" font-size="12" fill="#444">subtitles + stop button</text>
+  <text x="440" y="300" text-anchor="middle" font-size="12" fill="#888">audio: PipeWire -&gt; xrdp-sink</text>
+  <text x="440" y="318" text-anchor="middle" font-size="12" fill="#888">-&gt; out to the Mac side</text>
+
+  <!-- audience -->
+  <rect x="320" y="408" width="240" height="86" rx="8" fill="#fdeef0" stroke="#d05c6e"/>
+  <text x="440" y="445" text-anchor="middle" font-size="14" font-weight="bold" fill="#a8364a">What the audience sees</text>
+  <text x="440" y="468" text-anchor="middle" font-size="12" fill="#444">a single-screen picture of</text>
+  <text x="440" y="485" text-anchor="middle" font-size="12" fill="#444">"AI looking, thinking, talking"</text>
+
+  <!-- Docker box -->
+  <rect x="610" y="160" width="270" height="320" rx="10" fill="#ffffff" stroke="#2496ed" stroke-width="2"/>
+  <text x="626" y="184" font-size="14" font-weight="bold" fill="#1a6fb5">Docker (network_mode: host)</text>
+  <rect x="628" y="200" width="234" height="120" rx="8" fill="#e9f4fc" stroke="#2496ed"/>
+  <text x="745" y="223" text-anchor="middle" font-size="13" font-weight="bold" fill="#155a8a">OpenClaw Gateway</text>
+  <text x="745" y="242" text-anchor="middle" font-size="12" fill="#444">:18789 control plane</text>
+  <text x="745" y="262" text-anchor="middle" font-size="12" fill="#444">Qwen3 agent runtime</text>
+  <text x="745" y="282" text-anchor="middle" font-size="12" fill="#444">skill: play2048</text>
+  <text x="745" y="302" text-anchor="middle" font-size="12" fill="#444">exec -&gt; bundled Python CLI</text>
+
+  <rect x="628" y="336" width="234" height="126" rx="8" fill="#e9f4fc" stroke="#2496ed"/>
+  <text x="745" y="359" text-anchor="middle" font-size="13" font-weight="bold" fill="#155a8a">play2048_cdp.py</text>
+  <text x="745" y="379" text-anchor="middle" font-size="12" fill="#444">read / solve / steps</text>
+  <text x="745" y="397" text-anchor="middle" font-size="12" fill="#444">press / narrate / newgame</text>
+  <text x="745" y="417" text-anchor="middle" font-size="12" fill="#444">expectimax (pure Python/CPU)</text>
+  <text x="745" y="437" text-anchor="middle" font-size="12" fill="#444">drives the host Chrome via</text>
+  <text x="745" y="453" text-anchor="middle" font-size="12" fill="#444">connect_over_cdp</text>
+
+  <!-- demo_loop -->
+  <rect x="610" y="500" width="270" height="64" rx="10" fill="#fffbe6" stroke="#c9a227" stroke-width="2"/>
+  <text x="745" y="525" text-anchor="middle" font-size="13" font-weight="bold" fill="#8a6d12">demo_loop.sh</text>
+  <text x="745" y="545" text-anchor="middle" font-size="12" fill="#444">continuous run: fresh session / few moves</text>
+
+  <!-- arrows -->
+  <path d="M628,400 C480,400 360,300 282,205" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="470" y="350" font-size="11" fill="#555">CDP :9222</text>
+  <path d="M628,300 C470,300 360,290 282,289" fill="none" stroke="#e08a2b" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="430" y="282" font-size="11" fill="#9c5a14">LLM :8080</text>
+  <path d="M628,430 C460,470 340,470 282,455" fill="none" stroke="#2fa76a" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="420" y="492" font-size="11" fill="#1c7a49">narrate /speak :8000</text>
+  <path d="M280,520 C300,520 300,300 318,250" fill="none" stroke="#7a5cd0" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <path d="M160,508 L160,242" fill="none" stroke="#2fa76a" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <path d="M281,430 C300,430 300,300 318,270" fill="none" stroke="#2fa76a" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <path d="M440,330 L440,406" fill="none" stroke="#d05c6e" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <path d="M745,500 L745,464" fill="none" stroke="#c9a227" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <text x="36" y="600" font-size="12" fill="#888">Fully offline / board read from localStorage gameState (zero recognition error)</text>
+</svg>

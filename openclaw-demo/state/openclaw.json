@@ -1,0 +1,68 @@
+{
+  // 2048×OpenClaw 実況デモ用の Gateway 設定。
+  // ベーススタックは ~/EarthTourGuide（llama-server :8080 を共用, --parallel 2）。
+
+  // ローカル単一マシンのデモ用。token は .env(OPENCLAW_GATEWAY_TOKEN) から渡る。
+  gateway: { mode: "local" },
+
+  // --- LLM プロバイダ: ホストの llama-server を OpenAI互換として登録 ---
+  // vLLM/SGLang 等と同じ openai-completions。ホストへは host.docker.internal 経由。
+  // ダミーキーで可（llama-server は認証しない）。Qwen3 は thinking 無効で使う。
+  models: {
+    mode: "merge",
+    providers: {
+      "llama-host": {
+        // host ネットワークなので localhost で host の llama-server に直接到達。
+        // （host.docker.internal は host モードでは解決できない点に注意）
+        baseUrl: "http://localhost:8080/v1",
+        apiKey: "dummy-key",
+        api: "openai-completions",
+        timeoutSeconds: 300,
+        models: [
+          {
+            id: "qwen3",
+            name: "Qwen3.6-35B-A3B (host llama-server)",
+            reasoning: false,
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            // OpenClaw は「プロンプト ≤ contextWindow/2」を要求（残り半分を応答に予約）。
+            // ★重要: contextWindow は llama の per-slot n_ctx に一致させる必要はない。
+            //   ガードが許す最大使用量 = contextWindow/2 + maxTokens(1024) = 25600。
+            //   これが llama スロットに収まれば良い → スロット 32768 で十分。
+            // 検証済み構成（2026-06-07, プラグイン deny 後）:
+            //   contextWindow 49152 + llama `-c 65536 --parallel 2`(per-slot 32768)。
+            //   初回プロンプト P=16902、2手 narrate のピーク n_past=19610（truncated=0）。
+            //   VRAM 24.8GB/48GB。→ parallel 2 を保ったまま overflow なしで成立。
+            contextWindow: 49152,
+            maxTokens: 1024,
+            // Qwen のチャットテンプレート kwargs で thinking を制御。
+            // /think off → enable_thinking:false（実況は短文・低レイテンシ）。
+            compat: { thinkingFormat: "qwen-chat-template" },
+          },
+        ],
+      },
+    },
+  },
+
+  // bundled スキル(weather/xurl/wacli 等 約57個)を全部システムプロンプトから外す。
+  // workspace の play2048 は影響を受けない。
+  skills: { allowBundled: [] },
+
+  // エージェントにツールを供給する不要プラグインを無効化してプロンプトを縮小する
+  // （browser はOpenClaw内蔵ブラウザツール=本デモは自前playwright/execを使うので不要、等）。
+  // deny が優先。プロバイダ系プラグインは残るのでモデル(llama-host)は壊れない。
+  // 効果: 初回プロンプトが約21k→16.9k に縮小（検証 2026-06-07）。
+  plugins: {
+    deny: ["browser", "canvas", "device-pair", "file-transfer",
+           "memory-core", "phone-control", "talk-voice"],
+  },
+
+  agents: {
+    defaults: {
+      model: { primary: "llama-host/qwen3" },
+      // サンドボックスは使わない（mode 未設定 = 無効）。
+      // → exec は gateway コンテナ内で直接実行。コンテナに Python+playwright があり、
+      //   extra_hosts でホストの Chrome(CDP)/2048/llama/VOICEVOX に到達できる。
+    },
+  },
+}
