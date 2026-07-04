@@ -1,0 +1,93 @@
+# 2048×OpenClaw デモ用の自前 Compose（公式 docker-compose.yml を必要分だけ簡素化）。
+# 方針:
+#  - サンドボックスは使わない（agents.defaults.sandbox 無効）。よって `exec` は
+#    この gateway コンテナ内で直接走る。コンテナには Python+playwright が入っている。
+#  - network_mode: host を採用。理由: Chrome 149 は remote-debugging を 127.0.0.1 に
+#    しか bind しない（--remote-debugging-address=0.0.0.0 を無視）ため、bridge+host.docker.internal
+#    では CDP に届かない。host ネットワークなら localhost:9222/8009/8080/50021 に直接到達でき、
+#    Chrome の DNS-rebinding(Host ヘッダ)制限も localhost なので回避できる。
+#    （CLAUDE.md §7「Linux なら network_mode: host が最も簡単」に一致）
+#  - 設定とワークスペース(スキル)は AI2048 配下の state/ をバインドマウント。
+services:
+  openclaw-gateway:
+    image: openclaw-2048:local
+    build: .
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      # エージェント実行時の exec はこの gateway コンテナ内で走る。host ネットワークなので
+      # ホストサービスは localhost で参照（既定値と同じだが明示）。
+      PLAY2048_CDP_URL: "http://localhost:9222"
+      PLAY2048_GAME_URL: "http://localhost:8009"
+      # Phase 2: 実況は EarthTourGuide の three-vrm /speak（:8000）→ VOICEVOX → VRMずんだもん同居。
+      PLAY2048_VRM_URL: "http://localhost:8000"
+      # テンポ: 実況間引きモード。narrate は発話を喋り終わるまで待ってから返す（盤面と実況の同期）。
+      # 着手間隔は短縮。被り/打ち切りを避けるため WAIT は有効（"1"）。
+      PLAY2048_NARRATE_WAIT: "1"
+      PLAY2048_MOVE_DELAY: "0.2"
+      TZ: ${OPENCLAW_TZ:-Asia/Tokyo}
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
+      - "${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace"
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    # host ネットワーク（Chrome CDP が 127.0.0.1 固定のため）。18789 はホストに直接出る。
+    network_mode: "host"
+    init: true
+    restart: unless-stopped
+    command:
+      ["node", "dist/index.js", "gateway", "--bind", "${OPENCLAW_GATEWAY_BIND:-lan}", "--port", "18789"]
+    healthcheck:
+      test:
+        ["CMD", "node", "-e", "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # CLI（gateway とネットワーク共有）。`docker compose run --rm openclaw-cli ...` で叩く。
+  openclaw-cli:
+    image: openclaw-2048:local
+    network_mode: "host"
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      # host ネットワークなのでホストサービスは localhost で参照。
+      PLAY2048_CDP_URL: "http://localhost:9222"
+      PLAY2048_GAME_URL: "http://localhost:8009"
+      # Phase 2: 実況は EarthTourGuide の three-vrm /speak（:8000）→ VOICEVOX → VRMずんだもん同居。
+      PLAY2048_VRM_URL: "http://localhost:8000"
+      # テンポ: 実況間引きモード。narrate は発話を喋り終わるまで待ってから返す（盤面と実況の同期）。
+      # 着手間隔は短縮。被り/打ち切りを避けるため WAIT は有効（"1"）。
+      PLAY2048_NARRATE_WAIT: "1"
+      PLAY2048_MOVE_DELAY: "0.2"
+      TZ: ${OPENCLAW_TZ:-Asia/Tokyo}
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
+      - "${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace"
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    depends_on:
+      - openclaw-gateway
