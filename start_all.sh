@@ -21,7 +21,8 @@ export PULSE_SERVER="${PULSE_SERVER:-unix:${XDG_RUNTIME_DIR}/pulse/native}"
 export DISPLAY="${DISPLAY:-:0}"
 
 SESSION="ai2048"
-ROOT="/home/$USER/AI2048"
+# スクリプト自身の位置から解決（フォルダ名に依存しない）。
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- llama（AIzunda/EarthTourGuide と共用。確定構成 -c 65536 --parallel 2）---
 LLAMA_BIN="/home/$USER/llama.cpp/build/bin/llama-server"

@@ -11,7 +11,8 @@
 set -uo pipefail
 
 SESSION="ai2048"
-ROOT="/home/$USER/AI2048"
+# スクリプト自身の位置から解決（フォルダ名に依存しない）。
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_DIR="${ROOT}/openclaw-demo"
 VOICEVOX_CONTAINER="voicevox_engine"
 CDP_PROFILE="/tmp/chrome-cdp-2048"
