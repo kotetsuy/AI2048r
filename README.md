@@ -52,8 +52,8 @@ Required commands: `docker` (+ compose v2), `tmux`, `curl`, `google-chrome`, `py
 ```bash
 # 1) Clone
 cd ~
-git clone <this repository> AI2048
-cd AI2048
+git clone <this repository> AI2048r
+cd AI2048r
 
 # 2) Get the 2048 game (the offline serving source)
 git clone https://github.com/gabrielecirulli/2048 ~/2048
@@ -89,7 +89,7 @@ The one-liner in step 4 generates `.env` automatically from the current director
 ## 4. Start (one command)
 
 ```bash
-cd ~/AI2048
+cd ~/AI2048r
 ./start_all.sh
 ```
 
@@ -122,7 +122,7 @@ OK if it exits 0, the board on the host screen changes, and the avatar speaks.
 ## 5. Continuous run (the actual demo)
 
 ```bash
-cd ~/AI2048
+cd ~/AI2048r
 ./demo_loop.sh
 ```
 
